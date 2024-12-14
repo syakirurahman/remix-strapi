@@ -10,7 +10,7 @@ import {
 } from "@remix-run/react";
 import { type LinksFunction } from "@remix-run/node";
 import appStyleHref from './app.css'
-import { getContacts } from "./data";
+import { getContacts } from "./data.server";
 export const links: LinksFunction = () => [
   { rel:"stylesheet", href: appStyleHref }
 ]
@@ -49,11 +49,11 @@ export default function App() {
             </Form>
           </div>
           <nav>
-            {contacts.length ? (
+            {contacts?.length ? (
               <ul>
                 {contacts.map((contact) => (
                   <li key={contact.id}>
-                    <Link to={`contacts/${contact.id}`}>
+                    <Link to={`contacts/${contact.documentId}`}>
                       {contact.first || contact.last ? (
                         <>
                           {contact.first} {contact.last}
