@@ -28,11 +28,24 @@ export async function getContacts(query?: string | null) {
   }
 }
 
-export async function createEmptyContact() {
+export async function createContact(data: Record<string, unknown>) {
+  try {
+    const response = await fetch(STRAPI_BASE_URL + "/api/contacts", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ data }),
+    });
+    const json = await response.json()
+    return json.data
+  } catch (err) {
+    console.log(err)
+  }
 }
 
 export async function getContact(documentId: string) {
-    try {
+  try {
     const response = await fetch(STRAPI_BASE_URL + "/api/contacts/" + documentId);
     const json = await response.json()
     return json.data
