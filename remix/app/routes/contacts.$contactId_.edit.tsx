@@ -1,9 +1,22 @@
-import { useNavigate, Form, useActionData } from "@remix-run/react";
-import { type ActionFunctionArgs, redirect } from "@remix-run/node";
-import { createContact } from "./../data.server";
+import { useNavigate, Form, useActionData, useLoaderData } from "@remix-run/react";
+import { type ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/node";
+import { updateContact, getContact } from "./../data.server";
 import * as z from "zod";
+import invariant from "tiny-invariant";
 
-export async function action({ request }: ActionFunctionArgs) {
+export const loader = async ({
+  params,
+}: LoaderFunctionArgs) => {
+  invariant(params.contactId, "Missing contactId param");
+  const contact = await getContact(params.contactId);
+  if (!contact) {
+    throw new Response("Not Found", { status: 404 });
+  }
+  return { contact };
+};
+export async function action({ params, request }: ActionFunctionArgs) {
+  invariant(params.contactId, "Missing contactId param");
+
   const formData = await request.formData();
   const data = Object.fromEntries(formData);
 
@@ -29,12 +42,13 @@ export async function action({ request }: ActionFunctionArgs) {
     }
   }
 
-  const newEntry = await createContact(data);  
-  return redirect("/contacts/" + newEntry.documentId)
+  const updatedEntry = await updateContact(params.contactId, data);  
+  return redirect("/contacts/" + updatedEntry.documentId)
 }
-export default function CreateContact() {
+export default function EditContact() {
   const navigate = useNavigate();
-  const formData = useActionData<typeof action>()
+  const { contact } = useLoaderData<typeof loader>();
+  const formData = useActionData<typeof action>();
 
   return (
     <Form method="post">
@@ -45,6 +59,7 @@ export default function CreateContact() {
           type="text"
           label="First name"
           placeholder="First"
+          defaultValue={contact?.first}
           errors={formData?.errors}
         />
         <FormInput
@@ -53,6 +68,7 @@ export default function CreateContact() {
           type="text"
           label="Last name"
           placeholder="Last"
+          defaultValue={contact?.last}
           errors={formData?.errors}
         />
         <FormInput
@@ -60,6 +76,7 @@ export default function CreateContact() {
           type="text"
           label="Twitter"
           placeholder="@jack"
+          defaultValue={contact?.twitter}
           errors={formData?.errors}
         />
         <FormInput
@@ -68,17 +85,18 @@ export default function CreateContact() {
           type="text"
           label="Avatar URL"
           placeholder="https://example.com/avatar.jpg"
+          defaultValue={contact?.avatar}
           errors={formData?.errors}
         />
       </div>
       <br/>
       <div className="input-field">
         <label htmlFor="notes">Notes</label>
-        <textarea id="notes" name="notes" rows={6} />
+        <textarea id="notes" name="notes" rows={6} defaultValue={contact?.notes} />
       </div>
 
       <div className="button-group">
-        <button type="submit">Create</button>
+        <button type="submit">Update</button>
         <button type="button" onClick={() => navigate(-1)}>
           Cancel
         </button>

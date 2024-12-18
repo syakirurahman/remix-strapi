@@ -1,4 +1,4 @@
-import { Form, useLoaderData } from "@remix-run/react";
+import { Form, isRouteErrorResponse, Link, useLoaderData, useRouteError } from "@remix-run/react";
 import type { FunctionComponent } from "react";
 
 import { getContact, type ContactRecord } from "../data.server";
@@ -11,10 +11,27 @@ export const loader = async ({
   invariant(params.contactId, "Missing contactId param");
   const contact = await getContact(params.contactId);
   if (!contact) {
-    throw new Response("Not Found", { status: 404 });
+    throw new Response("Contact Not Found", { status: 404});
   }
   return { contact };
 };
+
+export function ErrorBoundary() {
+  const error = useRouteError();
+  return (
+    <div style={{ padding: '3rem'}}>
+      <h2>Oh no! Something went wrong</h2>
+      {
+        isRouteErrorResponse(error) && <div>
+          <div><strong>{error.status} Error</strong></div>
+          <div>{error.data}</div>
+          <br/>
+          <Link to="/" className="buttonLink">Go back to home</Link>
+        </div>
+      }
+    </div>
+  );
+}
 
 export default function Contact() {
   const { contact } = useLoaderData<typeof loader>();
@@ -53,12 +70,10 @@ export default function Contact() {
         {contact.notes ? <p>{contact.notes}</p> : null}
 
         <div>
-          <Form action="edit">
-            <button type="submit">Edit</button>
-          </Form>
+          <Link to={`/contacts/${contact.documentId}/edit`} className="buttonLink">Edit</Link>
 
           <Form
-            action="destroy"
+            action="delete"
             method="post"
             onSubmit={(event) => {
               const response = confirm(

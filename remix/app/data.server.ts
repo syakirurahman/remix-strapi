@@ -22,7 +22,7 @@ export async function getContacts(query?: string | null) {
   try {
     const response = await fetch(STRAPI_BASE_URL + "/api/contacts")
     const json = await response.json()
-    return json.data
+    return json.data as ContactMutation[]
   } catch (err) {
     console.log(err)
   }
@@ -54,9 +54,31 @@ export async function getContact(documentId: string) {
   }
 }
 
-export async function updateContact(id: string, updates: ContactMutation) {
+export async function updateContact(documentId: string, updates: ContactMutation) {
+  try {
+    const response = await fetch(STRAPI_BASE_URL + "/api/contacts/" + documentId, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ data: { ...updates} }),
+    });
+    const json = await response.json();
+    return json.data;
+  } catch (error) {
+    console.log(error);
+  }
 }
 
-export async function deleteContact(id: string) {
+export async function deleteContact(documentId: string) {
+  try {
+    const response = await fetch(STRAPI_BASE_URL + "/api/contacts/" + documentId, {
+      method: "DELETE",
+    });
+    const json = await response.json();
+    return json.data;
+  } catch (error) {
+    console.log(error);
+  }
 }
 

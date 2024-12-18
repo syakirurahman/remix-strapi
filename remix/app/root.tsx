@@ -1,5 +1,6 @@
 import {
   Form,
+  isRouteErrorResponse,
   Link,
   Links,
   Meta,
@@ -7,9 +8,10 @@ import {
   Scripts,
   ScrollRestoration,
   useLoaderData,
+  useRouteError,
 } from "@remix-run/react";
 import { type LinksFunction } from "@remix-run/node";
-import appStyleHref from './app.css'
+import appStyleHref from './app.css?url'
 import { getContacts } from "./data.server";
 export const links: LinksFunction = () => [
   { rel:"stylesheet", href: appStyleHref }
@@ -19,6 +21,33 @@ export const loader = async () => {
   const contacts = await getContacts();
   return { contacts }
 };
+
+export function ErrorBoundary() {
+  const error = useRouteError();
+  return (
+    <html lang="en">
+      <head>
+        <title>Oh no!</title>
+        <Meta />
+        <Links />
+      </head>
+      <body>
+        <div style={{ padding: '3rem'}}>
+          <h2>Oh no! Something went wrong</h2>
+          {
+            isRouteErrorResponse(error) && <div>
+              <div><strong>{error.status} Error</strong></div>
+              <div>{error.data}</div>
+              <br/>
+              <Link to="/" className="buttonLink">Go back to home</Link>
+            </div>
+          }
+        </div>
+        <Scripts />
+      </body>
+    </html>
+  );
+}
 
 export default function App() {
   const { contacts } = useLoaderData<typeof loader>();
@@ -44,7 +73,7 @@ export default function App() {
               />
               <div id="search-spinner" aria-hidden hidden={true} />
             </Form>
-            <Link to="contacts/create" className="buttonLink">New</Link>
+            <Link to="contacts/create" className="buttonLink">Create</Link>
           </div>
           <nav>
             {contacts?.length ? (
