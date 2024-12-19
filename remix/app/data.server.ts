@@ -1,3 +1,5 @@
+import qs from "qs"
+
 type ContactMutation = {
   id?: string;
   documentId?: string;
@@ -18,9 +20,24 @@ export type ContactRecord = ContactMutation & {
 // https://stackoverflow.com/questions/71836634/strapi-fetcherror-request-to-http-localhost1337-api-events-failed-reason-c
 const STRAPI_BASE_URL = process.env.STRAPI_BASE_URL || 'http://127.0.0.1:1337'
 
-export async function getContacts(query?: string | null) {
+export async function getContacts(q?: string | null) {
+  const query = qs.stringify({
+    sort: 'createdAt:desc',
+    filters: {
+      $or: [
+        { first: { $contains: q }},
+        { last: { $contains: q }},
+        { twitter: { $contains: q }},
+      ]
+    },
+    pagination: {
+      pageSize: 50,
+      page: 1,
+    },
+  })
+
   try {
-    const response = await fetch(STRAPI_BASE_URL + "/api/contacts")
+    const response = await fetch(STRAPI_BASE_URL + "/api/contacts?" + query)
     const json = await response.json()
     return json.data as ContactMutation[]
   } catch (err) {

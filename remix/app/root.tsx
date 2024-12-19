@@ -9,17 +9,21 @@ import {
   ScrollRestoration,
   useLoaderData,
   useRouteError,
+  useSubmit,
 } from "@remix-run/react";
-import { type LinksFunction } from "@remix-run/node";
+import { LoaderFunctionArgs, type LinksFunction } from "@remix-run/node";
 import appStyleHref from './app.css?url'
 import { getContacts } from "./data.server";
+import { useEffect } from "react";
 export const links: LinksFunction = () => [
   { rel:"stylesheet", href: appStyleHref }
 ]
 
-export const loader = async () => {
-  const contacts = await getContacts();
-  return { contacts }
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  const url = new URL(request.url);
+  const q = url.searchParams.get("q");
+  const contacts = await getContacts(q);
+  return { contacts, q }
 };
 
 export function ErrorBoundary() {
@@ -50,7 +54,15 @@ export function ErrorBoundary() {
 }
 
 export default function App() {
-  const { contacts } = useLoaderData<typeof loader>();
+  const { contacts, q } = useLoaderData<typeof loader>();
+  const submit = useSubmit();
+
+  useEffect(() => {
+    const searchField = document.getElementById("q");
+    if (searchField instanceof HTMLInputElement) {
+      searchField.value = q || "";
+    }
+  }, [q]);
   return (
     <html lang="en">
       <head>
@@ -63,13 +75,14 @@ export default function App() {
         <div id="sidebar">
           <h1>Remix Contacts</h1>
           <div>
-            <Form id="search-form" role="search">
+            <Form id="search-form" role="search" onChange={(e) => submit(e.currentTarget)}>
               <input
                 id="q"
                 aria-label="Search contacts"
                 placeholder="Search"
                 type="search"
                 name="q"
+                defaultValue={q || ''}
               />
               <div id="search-spinner" aria-hidden hidden={true} />
             </Form>
