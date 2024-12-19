@@ -1,8 +1,8 @@
 import { Form, isRouteErrorResponse, Link, useLoaderData, useRouteError } from "@remix-run/react";
 import type { FunctionComponent } from "react";
 
-import { getContact, type ContactRecord } from "../data.server";
-import type { LoaderFunctionArgs } from "@remix-run/node";
+import { getContact, updateContact, type ContactRecord } from "../data.server";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import invariant from "tiny-invariant";
 
 export const loader = async ({
@@ -15,6 +15,14 @@ export const loader = async ({
   }
   return { contact };
 };
+
+export async function action({ params, request} : ActionFunctionArgs ) {
+  invariant(params.contactId, "Missing contactId param");
+  const formData = await request.formData();
+  return updateContact(params.contactId, {
+    favorite: formData.get("favorite") === "true"
+  })
+}
 
 export function ErrorBoundary() {
   const error = useRouteError();
