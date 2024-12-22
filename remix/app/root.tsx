@@ -8,13 +8,13 @@ import {
   Scripts,
   ScrollRestoration,
   useLoaderData,
+  useNavigation,
   useRouteError,
   useSubmit,
 } from "@remix-run/react";
 import { LoaderFunctionArgs, type LinksFunction } from "@remix-run/node";
 import appStyleHref from './app.css?url'
 import { getContacts } from "./data.server";
-import { useEffect } from "react";
 export const links: LinksFunction = () => [
   { rel:"stylesheet", href: appStyleHref }
 ]
@@ -56,13 +56,9 @@ export function ErrorBoundary() {
 export default function App() {
   const { contacts, q } = useLoaderData<typeof loader>();
   const submit = useSubmit();
+  const navigation = useNavigation();
+  const searching = navigation.location && new URLSearchParams(navigation.location.search).has("q");
 
-  useEffect(() => {
-    const searchField = document.getElementById("q");
-    if (searchField instanceof HTMLInputElement) {
-      searchField.value = q || "";
-    }
-  }, [q]);
   return (
     <html lang="en">
       <head>
@@ -75,16 +71,22 @@ export default function App() {
         <div id="sidebar">
           <h1>Remix Contacts</h1>
           <div>
-            <Form id="search-form" role="search" onChange={(e) => submit(e.currentTarget)}>
+            <Form id="search-form" role="search" onChange={(e) => {
+              const isFirstSearch = q === null;
+              submit(e.currentTarget, {
+                replace: !isFirstSearch,
+              });
+            }}>
               <input
                 id="q"
+                className={searching ? 'loading' : ''}
                 aria-label="Search contacts"
-                placeholder="Search"
+                placeholder="Search" 
                 type="search"
                 name="q"
                 defaultValue={q || ''}
               />
-              <div id="search-spinner" aria-hidden hidden={true} />
+              <div id="search-spinner" aria-hidden hidden={!searching} />
             </Form>
             <Link to="contacts/create" className="buttonLink">Create</Link>
           </div>
