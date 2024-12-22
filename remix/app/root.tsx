@@ -4,6 +4,7 @@ import {
   Link,
   Links,
   Meta,
+  NavLink,
   Outlet,
   Scripts,
   ScrollRestoration,
@@ -82,7 +83,7 @@ export default function App() {
                   submit(formTarget, {
                     replace: !isFirstSearch,
                   });
-                }, 500); // 500ms timeout
+                }, 500); // form will be submitted only if the keystroke pause / stop for 500ms
               }
               submitOnStopTyping(e);
             }}>
@@ -104,7 +105,11 @@ export default function App() {
               <ul>
                 {contacts.map((contact) => (
                   <li key={contact.id}>
-                    <Link to={`contacts/${contact.documentId}`}>
+                    <NavLink
+                      to={`contacts/${contact.documentId}`}
+                      className={({ isActive, isPending }) =>
+                        isPending ? "pending" : isActive ? "active" : ""
+                      }>
                       {contact.first || contact.last ? (
                         <>
                           {contact.first} {contact.last}
@@ -115,7 +120,7 @@ export default function App() {
                       {contact.favorite ? (
                         <span>★</span>
                       ) : null}
-                    </Link>
+                    </NavLink>
                   </li>
                 ))}
               </ul>
