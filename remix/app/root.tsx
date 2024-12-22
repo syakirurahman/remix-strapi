@@ -15,6 +15,7 @@ import {
 import { LoaderFunctionArgs, type LinksFunction } from "@remix-run/node";
 import appStyleHref from './app.css?url'
 import { getContacts } from "./data.server";
+import { FormEvent } from "react";
 export const links: LinksFunction = () => [
   { rel:"stylesheet", href: appStyleHref }
 ]
@@ -59,6 +60,7 @@ export default function App() {
   const navigation = useNavigation();
   const searching = navigation.location && new URLSearchParams(navigation.location.search).has("q");
 
+  let submitTimer: NodeJS.Timeout;
   return (
     <html lang="en">
       <head>
@@ -73,9 +75,16 @@ export default function App() {
           <div>
             <Form id="search-form" role="search" onChange={(e) => {
               const isFirstSearch = q === null;
-              submit(e.currentTarget, {
-                replace: !isFirstSearch,
-              });
+              const submitOnStopTyping = (e: FormEvent<HTMLFormElement>) => {
+                clearTimeout(submitTimer);
+                const formTarget = e.currentTarget;
+                submitTimer = setTimeout(() => {
+                  submit(formTarget, {
+                    replace: !isFirstSearch,
+                  });
+                }, 500); // 500ms timeout
+              }
+              submitOnStopTyping(e);
             }}>
               <input
                 id="q"
