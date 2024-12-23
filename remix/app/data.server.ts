@@ -65,9 +65,17 @@ export async function getContact(documentId: string) {
   try {
     const response = await fetch(STRAPI_BASE_URL + "/api/contacts/" + documentId);
     const json = await response.json()
-    return json.data
+    if (response.ok) {
+      return json.data
+    } else {
+      // fetch wont throw an error for 40X and 50X  errors
+      throw new Response("Strapi error message: "+ json.error?.message || '', { status: json.error.status, statusText: json.error.name })
+    }
+
   } catch (err) {
     console.log(err)
+    // re-throw the err to the function caller
+    throw err
   }
 }
 

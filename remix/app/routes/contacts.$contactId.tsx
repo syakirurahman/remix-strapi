@@ -10,9 +10,9 @@ export const loader = async ({
 }: LoaderFunctionArgs) => {
   invariant(params.contactId, "Missing contactId param");
   const contact = await getContact(params.contactId);
-  if (!contact) {
-    throw new Response("Contact Not Found", { status: 404});
-  }
+  // if (!contact) {
+  //   throw new Response("Contact Not Found", { status: 404});
+  // }
   return { contact };
 };
 
